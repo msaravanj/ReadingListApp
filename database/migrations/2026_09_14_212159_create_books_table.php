@@ -16,10 +16,9 @@ return new class extends Migration
             $table->string('title');
             $table->string('author');
             $table->string('status');
-            $table->integer('rating')
+            $table->unsignedTinyInteger('rating')
                 ->nullable()
-                ->comment('0-5')
-                ->check('rating >= 0 AND rating <= 5');
+                ->comment('0-5');
             $table->text('notes')
                 ->nullable();
             $table->string('cover_image')
