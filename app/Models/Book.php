@@ -2,6 +2,7 @@
 
 namespace App\Models;
 
+use App\Enums\BookStatus;
 use Database\Factories\BookFactory;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
@@ -23,6 +24,13 @@ class Book extends Model
         'cover_image',
         'isbn',
     ];
+
+    protected function casts(): array
+    {
+        return [
+            'status' => BookStatus::class,
+        ];
+    }
 
     /**
      * @return BelongsToMany<Category, $this>
