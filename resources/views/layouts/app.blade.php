@@ -24,4 +24,5 @@
     @livewireScripts
     @fluxScripts
 </body>
+
 </html>

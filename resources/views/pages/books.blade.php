@@ -122,6 +122,9 @@ new class extends Component {
         @foreach ($books as $book)
             <x-book-card :book="$book" />
         @endforeach
+        @if ($books->isEmpty())
+            <p class="text-gray-500">No books in your reading list yet.</p>
+        @endif
     </div>
     <x-book-modal />
 </div>
