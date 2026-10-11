@@ -15,7 +15,7 @@ class ActivitiesTable
     {
         return $table
             ->columns([
-                TextColumn::make('notes')
+                TextColumn::make('description')
                     ->searchable()
                     ->wrap(),
                 TextColumn::make('log_name')
@@ -29,7 +29,7 @@ class ActivitiesTable
                     ->formatStateUsing(fn (?string $state): string => $state ? class_basename($state) : '-'),
                 TextColumn::make('book_id')
                     ->label('Book ID')
-                    ->getStateUsing(fn ($record) => $record->subject?->id ?? '-'),
+                    ->getStateUsing(fn ($record) => $record->getProperty('book_id', '-')),
                 TextColumn::make('created_at')
                     ->dateTime(timezone: 'Europe/Zagreb', format: 'd.m.Y. H:i:s')
                     ->sortable(),
