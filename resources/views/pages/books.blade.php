@@ -50,9 +50,11 @@ new class extends Component {
 
     public function addBook($bookData)
     {
+        $title = $bookData['title'] ?? 'Untitled';
+        $author = !empty($bookData['author_name']) ? implode(', ', $bookData['author_name']) : 'Unknown Author';
         $book = new Book();
-        $book->title = $bookData['title'] ?? 'Untitled';
-        $book->author = !empty($bookData['author_name']) ? implode(', ', $bookData['author_name']) : 'Unknown Author';
+        $book->title = $title;
+        $book->author = $author;
         $book->cover_image = !empty($bookData['cover_i']) ? "https://covers.openlibrary.org/b/id/{$bookData['cover_i']}-M.jpg" : '';
         $book->isbn = !empty($bookData['isbn']) ? implode(', ', $bookData['isbn']) : '';
         $book->rating = null;
@@ -60,7 +62,7 @@ new class extends Component {
         $book->status = BookStatus::WANT_TO_READ->value;
 
         try {
-            $existingBook = Book::where('title', $book->title)->where('author', $book->author)->first();
+            $existingBook = Book::where('title', $title)->where('author', $author)->first();
 
             if ($existingBook) {
                 Flux::toast(variant: 'warning', text: __('This book is already in your reading list.'));
@@ -70,6 +72,7 @@ new class extends Component {
             $book->save();
             Flux::toast(variant: 'success', text: __('Book added to your reading list!'));
         } catch (\Exception $e) {
+            report($e);
             Flux::toast(variant: 'error', text: __('Error while adding the book: '));
             return;
         }
