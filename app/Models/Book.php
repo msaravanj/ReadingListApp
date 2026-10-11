@@ -16,6 +16,7 @@ class Book extends Model
      * @use HasFactory<BookFactory>
      */
     use HasFactory;
+
     use LogsActivity;
 
     protected $fillable = [
@@ -43,7 +44,7 @@ class Book extends Model
         return $this->belongsToMany(Category::class, 'book_category');
     }
 
-     public function getActivitylogOptions(): LogOptions
+    public function getActivitylogOptions(): LogOptions
     {
         return LogOptions::defaults()
             ->logOnly(['title', 'author', 'status', 'rating', 'notes', 'cover_image', 'isbn'])
