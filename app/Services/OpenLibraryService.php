@@ -6,6 +6,9 @@ use Illuminate\Support\Facades\Http;
 
 class OpenLibraryService
 {
+    /**
+     * @return array<int, array<string, mixed>>
+     */
     public function searchByTitle(string $title): array
     {
         $response = Http::get('https://openlibrary.org/search.json', [
@@ -18,7 +21,9 @@ class OpenLibraryService
             return [];
         }
 
-        return $response->json('docs', []);
+        $books = $response->json('docs', []);
+
+        return is_array($books) ? $books : [];
     }
 
     public function coverUrl(?int $coverId): string
