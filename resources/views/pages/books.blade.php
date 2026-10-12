@@ -13,6 +13,8 @@ new class extends Component {
     public $foundBooks = [];
     public $isLoading = false;
     public $books = [];
+    public $filteredBooks = [];
+    public $filterStatus = '';
 
     public function mount(): void
     {
@@ -80,6 +82,17 @@ new class extends Component {
         // Refresh liste
         $this->books = Book::query()->get();
     }
+
+    public function updatedFilterStatus(): void
+    {
+        $this->filterBooks();
+    }
+
+    private function filterBooks(): void
+    {
+        $this->filteredBooks = [];
+        $this->filteredBooks = Book::query()->where('status', $this->filterStatus)->get();
+    }
 };
 ?>
 
@@ -121,12 +134,46 @@ new class extends Component {
     </div>
     <hr class="w-full border-gray-300 my-8">
     <h1 class="mt-8 mb-2">Your reading list</h1>
-    <div class="list-group mb-20 flex flex-col gap-4">
-        @foreach ($books as $book)
-            <x-book-card :book="$book" />
-        @endforeach
-        @if ($books->isEmpty())
-            <p class="text-gray-500">No books in your reading list yet.</p>
+    <div id="readingList" class="flex flex-col w-full items-center justify-between gap-4" wire:poll.500ms>
+        <select wire:model="filterStatus"
+            class="form-control mb-4 border border-gray-300 rounded bg-white text-gray-800 placeholder:text-gray-500">
+            <option value="">All statuses</option>
+            @foreach (BookStatus::cases() as $status)
+                <option value="{{ $status->value }}">{{ $status->name }}</option>
+            @endforeach
+        </select>
+        @if ($filterStatus == BookStatus::WANT_TO_READ->value)
+            <p class="mb-4 text-gray-600">Showing books you want to read.</p>
+            @foreach ($filteredBooks as $book)
+                <x-book-card :book="$book" />
+            @endforeach
+            @if ($filteredBooks->isEmpty())
+                <p class="text-gray-600">You have no books in this category.</p>
+            @endif
+        @elseif ($filterStatus == BookStatus::READING->value)
+            <p class="mb-4 text-gray-600">Showing books you are currently reading.</p>
+            @foreach ($filteredBooks as $book)
+                <x-book-card :book="$book" />
+            @endforeach
+            @if ($filteredBooks->isEmpty())
+                <p class="text-gray-600">You have no books in this category.</p>
+            @endif
+        @elseif ($filterStatus == BookStatus::READ->value)
+            <p class="mb-4 text-gray-600">Showing books you have read.</p>
+            @foreach ($filteredBooks as $book)
+                <x-book-card :book="$book" />
+            @endforeach
+            @if ($filteredBooks->isEmpty())
+                <p class="text-gray-600">You have no books in this category.</p>
+            @endif
+        @elseif ($filterStatus == '')
+            <p class="mb-4 text-gray-600">Showing all books in your reading list.</p>
+            @foreach ($books as $book)
+                <x-book-card :book="$book" />
+            @endforeach
+            @if ($books->isEmpty())
+                <p class="text-gray-600">You have no books in your reading list.</p>
+            @endif
         @endif
     </div>
     <x-book-modal />
