@@ -1,19 +1,25 @@
 <?php
 
-use Livewire\Component;
-use App\Models\Book;
-use Illuminate\Support\Facades\Http;
-use Livewire\Attributes\Url;
 use App\Enums\BookStatus;
+use App\Http\Requests\OpenLibraryBookRequest;
+use App\Models\Book;
+use App\Services\OpenLibraryService;
 use Flux\Flux;
+use Livewire\Attributes\Url;
+use Livewire\Component;
 
 new class extends Component {
     #[Url]
     public $search = '';
+
     public $foundBooks = [];
+
     public $isLoading = false;
+
     public $books = [];
+
     public $filteredBooks = [];
+
     public $filterStatus = '';
 
     public function mount(): void
@@ -27,38 +33,30 @@ new class extends Component {
         $this->fetchBooks();
     }
 
-    public function fetchBooks()
+    public function fetchBooks(): void
     {
         if (strlen($this->search) < 3) {
             $this->foundBooks = [];
+
             return;
         }
 
         $this->isLoading = true;
-        $response = Http::get('https://openlibrary.org/search.json', [
-            'title' => $this->search,
-            'fields' => 'key,title,author_name,cover_i,isbn,editions,editions_description',
-            'limit' => 6,
-        ]);
-
-        if ($response->successful()) {
-            $this->foundBooks = $response->json('docs', []);
-        } else {
-            $this->foundBooks = [];
-        }
+        $this->foundBooks = app(OpenLibraryService::class)->searchByTitle($this->search);
 
         $this->isLoading = false;
-        return $this->foundBooks;
     }
 
-    public function addBook($bookData)
+    public function addBook(array $bookData): void
     {
+        $bookData = validator($bookData, new OpenLibraryBookRequest()->rules())->validate();
+        $openLibraryService = app(OpenLibraryService::class);
         $title = $bookData['title'] ?? 'Untitled';
         $author = !empty($bookData['author_name']) ? implode(', ', $bookData['author_name']) : 'Unknown Author';
         $book = new Book();
         $book->title = $title;
         $book->author = $author;
-        $book->cover_image = !empty($bookData['cover_i']) ? "https://covers.openlibrary.org/b/id/{$bookData['cover_i']}-M.jpg" : '';
+        $book->cover_image = $openLibraryService->coverUrl($bookData['cover_i'] ?? null);
         $book->isbn = !empty($bookData['isbn']) ? implode(', ', $bookData['isbn']) : '';
         $book->rating = null;
         $book->notes = $bookData['editions_description'] ?? '';
@@ -69,6 +67,7 @@ new class extends Component {
 
             if ($existingBook) {
                 Flux::toast(variant: 'warning', text: __('This book is already in your reading list.'));
+
                 return;
             }
 
@@ -77,6 +76,7 @@ new class extends Component {
         } catch (\Exception $e) {
             report($e);
             Flux::toast(variant: 'error', text: __('Error while adding the book: '));
+
             return;
         }
 
@@ -100,6 +100,16 @@ new class extends Component {
 
         $this->filteredBooks = $query->get();
     }
+
+    public function getStatusMessageProperty(): string
+    {
+        return match ($this->filterStatus) {
+            BookStatus::WANT_TO_READ->value => 'Showing books you want to read.',
+            BookStatus::READING->value => 'Showing books you are currently reading.',
+            BookStatus::READ->value => 'Showing books you have read.',
+            default => 'Showing all books in your reading list.',
+        };
+    }
 };
 ?>
 
@@ -111,7 +121,7 @@ new class extends Component {
     @if ($isLoading == true)
         <p>Loading...</p>
     @endif
-    <div class="list-group mb-20 flex flex-col gap-4">
+    <div class="list-group mb-20 flex flex-col w-full sm:w-xl gap-4">
         @if (!empty($foundBooks))
             @foreach ($foundBooks as $book)
                 <div wire:key="found-book-{{ $book['key'] ?? $loop->index }}"
@@ -150,39 +160,12 @@ new class extends Component {
                 <option value="{{ $status->value }}">{{ $status->name }}</option>
             @endforeach
         </select>
-        @if ($filterStatus == BookStatus::WANT_TO_READ->value)
-            <p class="mb-4 text-gray-600">Showing books you want to read.</p>
-            @foreach ($filteredBooks as $book)
-                <x-book-card :book="$book" />
-            @endforeach
-            @if ($filteredBooks->isEmpty())
-                <p class="text-gray-600">You have no books in this category.</p>
-            @endif
-        @elseif ($filterStatus == BookStatus::READING->value)
-            <p class="mb-4 text-gray-600">Showing books you are currently reading.</p>
-            @foreach ($filteredBooks as $book)
-                <x-book-card :book="$book" />
-            @endforeach
-            @if ($filteredBooks->isEmpty())
-                <p class="text-gray-600">You have no books in this category.</p>
-            @endif
-        @elseif ($filterStatus == BookStatus::READ->value)
-            <p class="mb-4 text-gray-600">Showing books you have read.</p>
-            @foreach ($filteredBooks as $book)
-                <x-book-card :book="$book" />
-            @endforeach
-            @if ($filteredBooks->isEmpty())
-                <p class="text-gray-600">You have no books in this category.</p>
-            @endif
-        @elseif ($filterStatus == '')
-            <p class="mb-4 text-gray-600">Showing all books in your reading list.</p>
-            @foreach ($filteredBooks as $book)
-                <x-book-card :book="$book" />
-            @endforeach
-            @if ($filteredBooks->isEmpty())
-                <p class="text-gray-600">You have no books in your reading list.</p>
-            @endif
-        @endif
+        <p class="mb-4 text-gray-600">{{ $this->statusMessage }}</p>
+        @forelse ($filteredBooks as $book)
+            <x-book-card :book="$book" />
+        @empty
+            <p class="text-gray-600">You have no books in your reading list.</p>
+        @endforelse
     </div>
     <x-book-modal />
 </div>
