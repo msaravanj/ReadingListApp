@@ -103,33 +103,34 @@ new class extends Component {
 };
 ?>
 
-<div class="container mt-40 flex flex-col items-center justify-center gap-4">
+<div class="container mt-20 flex w-full flex-col items-center justify-center gap-4 px-4">
     <p>Search for books</p>
     <input type="text" id="searchInput"
-        class="form-control mb-3 border border-gray-300 rounded bg-white text-gray-800 placeholder:text-gray-500"
+        class="form-control mb-3 w-full rounded border border-gray-300 bg-white text-gray-800 placeholder:text-gray-500 sm:w-xs"
         wire:model.live.debounce.500ms="search" placeholder="Search for books..." />
     @if ($isLoading == true)
         <p>Loading...</p>
     @endif
-    <div class="list-group flex flex-col w-xl mb-20 gap-4">
+    <div class="list-group mb-20 flex flex-col gap-4">
         @if (!empty($foundBooks))
             @foreach ($foundBooks as $book)
                 <div wire:key="found-book-{{ $book['key'] ?? $loop->index }}"
-                    class="flex gap-4 justify-between p-4 border rounded shadow-md  border-gray-300 hover:border-gray-600 transition-transform">
+                    class="flex flex-col gap-4 rounded border border-gray-300 p-4 shadow-md transition-transform sm:flex-row sm:justify-between">
                     @if (isset($book['cover_i']))
                         <img src="https://covers.openlibrary.org/b/id/{{ $book['cover_i'] }}-M.jpg"
-                            alt="{{ $book['title'] ?? 'Book cover' }}" class="rounded shadow-md w-32 h-48 object-cover">
+                            alt="{{ $book['title'] ?? 'Book cover' }}"
+                            class="mx-auto h-48 w-32 shrink-0 rounded object-cover shadow-md sm:mx-0">
                     @endif
-                    <div class="flex flex-col justify-between">
+                    <div class="flex min-w-0 flex-1 flex-col justify-between">
                         <div>
-                            <h3>{{ $book['title'] ?? 'Untitled' }}</h3>
-                            <p class="text-gray-600 text-sm italic">
+                            <h3 class="wrap-break-words">{{ $book['title'] ?? 'Untitled' }}</h3>
+                            <p class="wrap-break-words text-sm italic text-gray-600">
                                 {{ !empty($book['author_name']) ? implode(', ', $book['author_name']) : 'Unknown Author' }}
                             </p>
                         </div>
                         <div>
                             <button
-                                class="mt-2 px-4 py-2 text-white bg-mist-800 rounded hover:bg-mist-600 cursor-pointer transition-colors"
+                                class="mt-2 w-full rounded bg-mist-800 px-4 py-2 text-white transition-colors hover:bg-mist-600 cursor-pointer sm:w-auto"
                                 wire:click="addBook({{ json_encode($book) }})">
                                 Add to reading list
                             </button>
@@ -141,9 +142,9 @@ new class extends Component {
     </div>
     <hr class="w-full border-gray-300 my-8">
     <h1 class="mt-8 mb-2">Your reading list</h1>
-    <div id="readingList" class="flex flex-col w-full items-center justify-between gap-4 mb-40">
+    <div id="readingList" class="mb-40 flex w-full flex-col items-center justify-between gap-4">
         <select wire:model.live="filterStatus"
-            class="form-control mb-4 border border-gray-300 rounded bg-white text-gray-800 placeholder:text-gray-500">
+            class="form-control mb-4 rounded border w-full border-gray-300 bg-white text-gray-800 placeholder:text-gray-500 sm:w-xs">
             <option value="">All statuses</option>
             @foreach (BookStatus::cases() as $status)
                 <option value="{{ $status->value }}">{{ $status->name }}</option>

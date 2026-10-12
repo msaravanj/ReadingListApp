@@ -2,9 +2,9 @@
     x-on:keydown.escape.window="show = false" x-cloak x-show="show"
     class="fixed inset-0 z-50 flex items-center justify-center overflow-y-auto bg-black/50 p-4" role="dialog"
     aria-modal="true" x-on:click.self="show = false" x-transition.opacity>
-    <div class="relative flex max-h-[calc(100vh-2rem)] max-w-2xl overflow-y-auto rounded bg-gray-900 p-10 shadow-2xl"
+    <div class="relative flex max-h-[calc(100vh-2rem)] w-full max-w-2xl flex-col overflow-y-auto rounded bg-gray-900 p-6 shadow-2xl sm:flex-row sm:p-10"
         x-on:click.stop>
-        <div class="w-1/3">
+        <div class="mx-auto h-64 w-40 shrink-0 sm:mx-0 sm:h-auto sm:w-1/3">
             <img x-bind:src="book?.cover_image" x-bind:alt="book?.title" class="h-full w-full object-cover">
         </div>
         <div class="flex flex-col gap-6 p-4">
