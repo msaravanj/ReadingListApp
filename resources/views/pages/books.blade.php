@@ -19,6 +19,7 @@ new class extends Component {
     public function mount(): void
     {
         $this->books = Book::query()->get();
+        $this->filteredBooks = $this->books;
     }
 
     public function updatedSearch(): void
@@ -81,6 +82,7 @@ new class extends Component {
 
         // Refresh liste
         $this->books = Book::query()->get();
+        $this->filterBooks();
     }
 
     public function updatedFilterStatus(): void
@@ -90,8 +92,13 @@ new class extends Component {
 
     private function filterBooks(): void
     {
-        $this->filteredBooks = [];
-        $this->filteredBooks = Book::query()->where('status', $this->filterStatus)->get();
+        $query = Book::query();
+
+        if ($this->filterStatus !== '') {
+            $query->where('status', $this->filterStatus);
+        }
+
+        $this->filteredBooks = $query->get();
     }
 };
 ?>
@@ -104,7 +111,7 @@ new class extends Component {
     @if ($isLoading == true)
         <p>Loading...</p>
     @endif
-    <div class="list-group flex flex-col mb-20 gap-4">
+    <div class="list-group flex flex-col w-xl mb-20 gap-4">
         @if (!empty($foundBooks))
             @foreach ($foundBooks as $book)
                 <div wire:key="found-book-{{ $book['key'] ?? $loop->index }}"
@@ -134,8 +141,8 @@ new class extends Component {
     </div>
     <hr class="w-full border-gray-300 my-8">
     <h1 class="mt-8 mb-2">Your reading list</h1>
-    <div id="readingList" class="flex flex-col w-full items-center justify-between gap-4" wire:poll.500ms>
-        <select wire:model="filterStatus"
+    <div id="readingList" class="flex flex-col w-full items-center justify-between gap-4 mb-40">
+        <select wire:model.live="filterStatus"
             class="form-control mb-4 border border-gray-300 rounded bg-white text-gray-800 placeholder:text-gray-500">
             <option value="">All statuses</option>
             @foreach (BookStatus::cases() as $status)
@@ -168,10 +175,10 @@ new class extends Component {
             @endif
         @elseif ($filterStatus == '')
             <p class="mb-4 text-gray-600">Showing all books in your reading list.</p>
-            @foreach ($books as $book)
+            @foreach ($filteredBooks as $book)
                 <x-book-card :book="$book" />
             @endforeach
-            @if ($books->isEmpty())
+            @if ($filteredBooks->isEmpty())
                 <p class="text-gray-600">You have no books in your reading list.</p>
             @endif
         @endif
