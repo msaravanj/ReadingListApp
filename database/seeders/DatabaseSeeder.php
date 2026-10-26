@@ -30,7 +30,7 @@ class DatabaseSeeder extends Seeder
         Category::create(['name' => 'Science']);
         Category::create(['name' => 'History']);
 
-        Book::factory(6)->create();
+        Book::factory()->realBooks()->count(10)->create();
 
     }
 }
