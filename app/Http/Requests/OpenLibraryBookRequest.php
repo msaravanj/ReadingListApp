@@ -17,6 +17,7 @@ class OpenLibraryBookRequest extends FormRequest
     public function rules(): array
     {
         return [
+            'key' => ['nullable', 'string'],
             'title' => ['nullable', 'string'],
             'author_name' => ['nullable', 'array'],
             'author_name.*' => ['string'],

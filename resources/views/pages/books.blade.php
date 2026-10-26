@@ -60,6 +60,7 @@ new class extends Component {
 
         $bookData = validator($bookData, new OpenLibraryBookRequest()->rules())->validate();
         $openLibraryService = app(OpenLibraryService::class);
+        $metadata = $openLibraryService->bookMetadata($bookData['key'] ?? null);
         $title = $bookData['title'] ?? 'Untitled';
         $author = !empty($bookData['author_name']) ? implode(', ', $bookData['author_name']) : 'Unknown Author';
         $book = new Book();
@@ -67,8 +68,8 @@ new class extends Component {
         $book->author = $author;
         $book->cover_image = $openLibraryService->coverUrl($bookData['cover_i'] ?? null);
         $book->isbn = !empty($bookData['isbn']) ? implode(', ', $bookData['isbn']) : '';
-        $book->rating = null;
-        $book->notes = $bookData['editions_description'] ?? '';
+        $book->rating = $metadata['rating'];
+        $book->notes = $metadata['description'] ?? $bookData['editions_description'] ?? '';
         $book->status = BookStatus::WANT_TO_READ->value;
 
         try {
