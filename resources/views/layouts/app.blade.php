@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="{{ str_replace('_', '-', app()->getLocale()) }}">
+<html lang="{{ str_replace('_', '-', app()->getLocale()) }}" x-data="tallstackui_darkTheme({ default: 'dark' })" x-bind:class="{ 'dark': darkTheme }">
 
 <head>
     <meta charset="utf-8">
@@ -7,22 +7,24 @@
 
     <title>{{ $title ?? config('app.name') }}</title>
 
+    <tallstackui:script />
+    @livewireStyles
+
     @vite(['resources/css/app.css', 'resources/js/app.js'])
 
-    @livewireStyles
-    @fluxAppearance
+    <!-- Google Fonts - Lora -->
+    <link rel="preconnect" href="https://googleapis.com">
+    <link rel="preconnect" href="https://gstatic.com" crossorigin>
+    <link href="https://googleapis.com/css2?family=Lora:ital,wght@0,400..700;1,400..700&display=swap" rel="stylesheet">
 
-    <link rel="preconnect" href="https://fonts.bunny.net">
-    <link href="https://fonts.bunny.net/css?family=inter:400,500,600&display=swap" rel="stylesheet" />
 </head>
 
-<body>
+<body class="overflow-x-hidden bg-library-bg text-library-cream">
     {{ $slot }}
 
-    <flux:toast />
+    <x-toast />
 
     @livewireScripts
-    @fluxScripts
 </body>
 
 </html>

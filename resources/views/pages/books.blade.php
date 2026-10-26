@@ -4,11 +4,13 @@ use App\Enums\BookStatus;
 use App\Http\Requests\OpenLibraryBookRequest;
 use App\Models\Book;
 use App\Services\OpenLibraryService;
-use Flux\Flux;
+use TallStackUi\Traits\Interactions;
 use Livewire\Attributes\Url;
 use Livewire\Component;
 
 new class extends Component {
+    use Interactions;
+
     #[Url]
     public $search = '';
 
@@ -18,14 +20,16 @@ new class extends Component {
 
     public $books = [];
 
-    public $filteredBooks = [];
-
+    #[Url]
     public $filterStatus = '';
+
+    public $currentPage = 1;
+
+    public $booksPerPage = 8;
 
     public function mount(): void
     {
         $this->books = Book::query()->get();
-        $this->filteredBooks = $this->books;
     }
 
     public function updatedSearch(): void
@@ -41,14 +45,19 @@ new class extends Component {
             return;
         }
 
-        $this->isLoading = true;
         $this->foundBooks = app(OpenLibraryService::class)->searchByTitle($this->search);
-
-        $this->isLoading = false;
     }
 
-    public function addBook(array $bookData): void
+    public function addBook(int $bookIndex): void
     {
+        $bookData = $this->foundBooks[$bookIndex] ?? null;
+
+        if (! is_array($bookData)) {
+            $this->toast()->error('Book result is no longer available.')->send();
+
+            return;
+        }
+
         $bookData = validator($bookData, new OpenLibraryBookRequest()->rules())->validate();
         $openLibraryService = app(OpenLibraryService::class);
         $title = $bookData['title'] ?? 'Untitled';
@@ -66,31 +75,38 @@ new class extends Component {
             $existingBook = Book::where('title', $title)->where('author', $author)->first();
 
             if ($existingBook) {
-                Flux::toast(variant: 'warning', text: __('This book is already in your reading list.'));
-
+                $this->toast()->error('This book is already in your reading list!')->send();
                 return;
             }
 
             $book->save();
-            Flux::toast(variant: 'success', text: __('Book added to your reading list!'));
+            $this->toast()->success('Book added to your reading list!')->send();
         } catch (\Exception $e) {
             report($e);
-            Flux::toast(variant: 'error', text: __('Error while adding the book: '));
-
+            $this->toast()->error('Error while adding the book')->send();
             return;
         }
 
         // Refresh liste
         $this->books = Book::query()->get();
-        $this->filterBooks();
     }
 
-    public function updatedFilterStatus(): void
+    public function goToPage(int $page): void
     {
-        $this->filterBooks();
+        $this->currentPage = max(1, min($page, $this->totalPages));
     }
 
-    private function filterBooks(): void
+    public function getPaginatedBooksProperty()
+    {
+        return $this->filteredBooks->slice(($this->currentPage - 1) * $this->booksPerPage, $this->booksPerPage)->values();
+    }
+
+    public function getTotalPagesProperty(): int
+    {
+        return max(1, (int) ceil($this->filteredBooks->count() / $this->booksPerPage));
+    }
+
+    public function getFilteredBooksProperty()
     {
         $query = Book::query();
 
@@ -98,74 +114,23 @@ new class extends Component {
             $query->where('status', $this->filterStatus);
         }
 
-        $this->filteredBooks = $query->get();
+        return $query->get();
     }
 
     public function getStatusMessageProperty(): string
     {
         return match ($this->filterStatus) {
-            BookStatus::WANT_TO_READ->value => 'Showing books you want to read.',
-            BookStatus::READING->value => 'Showing books you are currently reading.',
-            BookStatus::READ->value => 'Showing books you have read.',
-            default => 'Showing all books in your reading list.',
+            BookStatus::WANT_TO_READ->value => 'Books I want to read.',
+            BookStatus::READING->value => 'Books I am currently reading.',
+            BookStatus::READ->value => 'Books I have read.',
+            default => 'My books',
         };
     }
 };
 ?>
 
-<div class="container mt-20 flex w-full flex-col items-center justify-center gap-4 px-4">
-    <p>Search for books</p>
-    <input type="text" id="searchInput"
-        class="form-control mb-3 w-full rounded border border-gray-300 bg-white text-gray-800 placeholder:text-gray-500 sm:w-xs"
-        wire:model.live.debounce.500ms="search" placeholder="Search for books..." />
-    @if ($isLoading == true)
-        <p>Loading...</p>
-    @endif
-    <div class="list-group mb-20 flex flex-col w-full sm:w-xl gap-4">
-        @if (!empty($foundBooks))
-            @foreach ($foundBooks as $book)
-                <div wire:key="found-book-{{ $book['key'] ?? $loop->index }}"
-                    class="flex flex-col gap-4 rounded border border-gray-300 p-4 shadow-md transition-transform sm:flex-row sm:justify-between">
-                    @if (isset($book['cover_i']))
-                        <img src="https://covers.openlibrary.org/b/id/{{ $book['cover_i'] }}-M.jpg"
-                            alt="{{ $book['title'] ?? 'Book cover' }}"
-                            class="mx-auto h-48 w-32 shrink-0 rounded object-cover shadow-md sm:mx-0">
-                    @endif
-                    <div class="flex min-w-0 flex-1 flex-col justify-between">
-                        <div>
-                            <h3 class="wrap-break-words">{{ $book['title'] ?? 'Untitled' }}</h3>
-                            <p class="wrap-break-words text-sm italic text-gray-600">
-                                {{ !empty($book['author_name']) ? implode(', ', $book['author_name']) : 'Unknown Author' }}
-                            </p>
-                        </div>
-                        <div>
-                            <button
-                                class="mt-2 w-full rounded bg-mist-800 px-4 py-2 text-white transition-colors hover:bg-mist-600 cursor-pointer sm:w-auto"
-                                wire:click="addBook({{ json_encode($book) }})">
-                                Add to reading list
-                            </button>
-                        </div>
-                    </div>
-                </div>
-            @endforeach
-        @endif
-    </div>
-    <hr class="w-full border-gray-300 my-8">
-    <h1 class="mt-8 mb-2">Your reading list</h1>
-    <div id="readingList" class="mb-40 flex w-full flex-col items-center justify-between gap-4">
-        <select wire:model.live="filterStatus"
-            class="form-control mb-4 rounded border w-full border-gray-300 bg-white text-gray-800 placeholder:text-gray-500 sm:w-xs">
-            <option value="">All statuses</option>
-            @foreach (BookStatus::cases() as $status)
-                <option value="{{ $status->value }}">{{ $status->name }}</option>
-            @endforeach
-        </select>
-        <p class="mb-4 text-gray-600">{{ $this->statusMessage }}</p>
-        @forelse ($filteredBooks as $book)
-            <x-book-card :book="$book" />
-        @empty
-            <p class="text-gray-600">You have no books in your reading list.</p>
-        @endforelse
-    </div>
+<div class="container flex w-full flex-col items-center justify-center gap-4 px-4">
+    <x-top-section :foundBooks="$foundBooks" :search="$search" />
+    <x-my-books-section :books="$books" />
     <x-book-modal />
 </div>

@@ -1,15 +1,35 @@
 @import "tailwindcss";
-@import "../../vendor/livewire/flux/dist/flux.css";
+@import "../../vendor/tallstackui/tallstackui/css/v4.css";
 
-@custom-variant dark (&:where(.dark, .dark *));
+@plugin '@tailwindcss/forms';
+
+@layer base {
+    *,
+    ::before,
+    ::after {
+        margin: 0;
+        padding: 0;
+        box-sizing: border-box;
+        font-family: "Lora", serif;
+    }
+}
 
 [x-cloak] {
     display: none !important;
 }
 
+@source '../../vendor/tallstackui/tallstackui/**/*.php';
 @source '../views';
 @source '../../vendor/laravel/framework/src/Illuminate/Pagination/resources/views/*.blade.php';
 
 @theme {
-    --font-sans: Inter, sans-serif;
+    --font-serif: "Lora", serif;
+    --color-library-bg: #17191b;
+    --color-library-surface: #222426;
+    --color-library-border: #383a3b;
+    --color-library-cream: #f1e8d8;
+    --color-library-muted: #bdb4a5;
+    --color-library-sage: #8ba58a;
+    --color-library-lavender: #a99ad5;
+    --color-library-amber: #d6a45d;
 }
