@@ -9,10 +9,10 @@ class OpenLibraryService
     /**
      * @return array<int, array<string, mixed>>
      */
-    public function searchByTitle(string $title): array
+    public function searchBooks(string $title): array
     {
         $response = Http::timeout(10)->get('https://openlibrary.org/search.json', [
-            'title' => $title,
+            'q' => $title,
             'fields' => 'key,title,author_name,cover_i,isbn,editions,editions_description',
             'limit' => 10,
         ])->throw();

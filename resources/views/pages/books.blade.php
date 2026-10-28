@@ -44,7 +44,7 @@ new class extends Component {
     public function fetchBooks(): void
     {
         try {
-            $this->foundBooks = app(OpenLibraryService::class)->searchByTitle($this->search);
+            $this->foundBooks = app(OpenLibraryService::class)->searchBooks($this->search);
         } catch (ConnectionException | RequestException $e) {
             report($e);
             $this->foundBooks = [];
