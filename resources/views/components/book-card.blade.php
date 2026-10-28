@@ -1,12 +1,5 @@
 @props(['book'])
 
-@php
-    $isbns = collect(explode(',', (string) $book->isbn))
-        ->map(fn(string $isbn): string => trim($isbn))
-        ->filter()
-        ->values();
-@endphp
-
 <div
     class="group relative flex h-full min-h-80 w-full min-w-0 flex-col overflow-hidden rounded-xl border border-library-border bg-library-surface shadow-md transition duration-300 hover:-translate-y-1 hover:border-gray-600 hover:shadow-xl">
     <div class="relative h-56 shrink-0 overflow-hidden bg-black/20">
@@ -42,18 +35,7 @@
             <p class="line-clamp-2 text-sm text-gray-400 italic">{{ $book->author }}</p>
         </div>
         <div class="mt-auto flex items-center justify-between border-t border-library-border pt-3">
-            <x-dropdown text="ISBN" xs>
-                <div class="flex max-h-32 max-w-56 flex-col gap-1 overflow-y-auto">
-                    @forelse ($isbns as $isbn)
-                        <span class="rounded bg-library-surface px-2 py-1 text-left text-xs break-all">
-                            {{ $isbn }}
-                        </span>
-                    @empty
-                        <span class="px-2 py-1 text-xs">No ISBN available</span>
-                    @endforelse
-                </div>
-            </x-dropdown>
-            <span class="text-xs text-gray-500">View details</span>
+            <span class="text-xs text-gray-400">ISBN: {{ $book->isbn ?? 'N/A' }}</span>
         </div>
     </div>
 </div>

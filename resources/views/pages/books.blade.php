@@ -72,7 +72,7 @@ new class extends Component {
             $book->title = $title;
             $book->author = $author;
             $book->cover_image = $openLibraryService->coverUrl($bookData['cover_i'] ?? null);
-            $book->isbn = !empty($bookData['isbn']) ? implode(', ', $bookData['isbn']) : '';
+            $book->isbn = !empty($bookData['isbn']) ? $bookData['isbn'][0] : '';
             $book->rating = $metadata['rating'];
             $book->notes = $metadata['description'] ?? ($bookData['editions_description'] ?? '');
             $book->status = BookStatus::WANT_TO_READ->value;

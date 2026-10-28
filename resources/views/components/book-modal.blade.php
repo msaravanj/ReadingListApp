@@ -28,13 +28,9 @@
             </div>
             <div>
                 <p class="mb-2 text-xs font-semibold uppercase tracking-wide text-gray-500">ISBN</p>
-                <div class="flex max-h-28 flex-col gap-2 overflow-y-auto">
-                    <template x-for="isbn in (book?.isbn ?? '').split(',').map(isbn => isbn.trim()).filter(Boolean)"
-                        :key="isbn">
-                        <span class="rounded bg-library-surface px-3 py-2 text-sm text-gray-300 break-all"
-                            x-text="isbn"></span>
-                    </template>
-                    <span x-show="!(book?.isbn ?? '').trim()" class="text-sm text-gray-500">No ISBN available</span>
+                <div class="flex flex-wrap gap-2">
+                    <span class="rounded bg-library-surface px-3 py-2 text-sm text-gray-300"
+                        x-text="book?.isbn ?? 'N/A'"></span>
                 </div>
             </div>
             <div>
