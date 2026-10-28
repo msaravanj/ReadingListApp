@@ -4,9 +4,12 @@ use App\Enums\BookStatus;
 use App\Http\Requests\OpenLibraryBookRequest;
 use App\Models\Book;
 use App\Services\OpenLibraryService;
-use TallStackUi\Traits\Interactions;
+use Illuminate\Database\QueryException;
+use Illuminate\Http\Client\ConnectionException;
+use Illuminate\Http\Client\RequestException;
 use Livewire\Attributes\Url;
 use Livewire\Component;
+use TallStackUi\Traits\Interactions;
 
 new class extends Component {
     use Interactions;
@@ -29,7 +32,7 @@ new class extends Component {
 
     public function mount(): void
     {
-        $this->books = Book::query()->get();
+        $this->loadBooks();
     }
 
     public function updatedSearch(): void
@@ -39,57 +42,71 @@ new class extends Component {
 
     public function fetchBooks(): void
     {
-        if (strlen($this->search) < 3) {
+        try {
+            $this->foundBooks = app(OpenLibraryService::class)->searchByTitle($this->search);
+        } catch (ConnectionException | RequestException $e) {
+            report($e);
             $this->foundBooks = [];
-
-            return;
+            $this->toast()->error('Error while searching for books.')->send();
         }
-
-        $this->foundBooks = app(OpenLibraryService::class)->searchByTitle($this->search);
     }
 
     public function addBook(int $bookIndex): void
     {
         $bookData = $this->foundBooks[$bookIndex] ?? null;
 
-        if (! is_array($bookData)) {
-            $this->toast()->error('Book result is no longer available.')->send();
+        if (!is_array($bookData)) {
+            $this->toast()->error('Error occurred while adding the book.')->send();
 
             return;
         }
 
-        $bookData = validator($bookData, new OpenLibraryBookRequest()->rules())->validate();
-        $openLibraryService = app(OpenLibraryService::class);
-        $metadata = $openLibraryService->bookMetadata($bookData['key'] ?? null);
-        $title = $bookData['title'] ?? 'Untitled';
-        $author = !empty($bookData['author_name']) ? implode(', ', $bookData['author_name']) : 'Unknown Author';
-        $book = new Book();
-        $book->title = $title;
-        $book->author = $author;
-        $book->cover_image = $openLibraryService->coverUrl($bookData['cover_i'] ?? null);
-        $book->isbn = !empty($bookData['isbn']) ? implode(', ', $bookData['isbn']) : '';
-        $book->rating = $metadata['rating'];
-        $book->notes = $metadata['description'] ?? $bookData['editions_description'] ?? '';
-        $book->status = BookStatus::WANT_TO_READ->value;
-
         try {
+            $bookData = validator($bookData, new OpenLibraryBookRequest()->rules())->validate();
+            $openLibraryService = app(OpenLibraryService::class);
+            $metadata = $openLibraryService->bookMetadata($bookData['key'] ?? null);
+
+            $title = $bookData['title'] ?? 'Untitled';
+            $author = !empty($bookData['author_name']) ? implode(', ', $bookData['author_name']) : 'Unknown Author';
+            $book = new Book();
+            $book->title = $title;
+            $book->author = $author;
+            $book->cover_image = $openLibraryService->coverUrl($bookData['cover_i'] ?? null);
+            $book->isbn = !empty($bookData['isbn']) ? implode(', ', $bookData['isbn']) : '';
+            $book->rating = $metadata['rating'];
+            $book->notes = $metadata['description'] ?? ($bookData['editions_description'] ?? '');
+            $book->status = BookStatus::WANT_TO_READ->value;
+
             $existingBook = Book::where('title', $title)->where('author', $author)->first();
 
             if ($existingBook) {
                 $this->toast()->error('This book is already in your reading list!')->send();
+
                 return;
             }
 
             $book->save();
             $this->toast()->success('Book added to your reading list!')->send();
-        } catch (\Exception $e) {
+        } catch (ConnectionException | RequestException $e) {
             report($e);
-            $this->toast()->error('Error while adding the book')->send();
-            return;
+            $this->toast()->error('Error while fetching book details.')->send();
+        } catch (QueryException $e) {
+            report($e);
+            $this->toast()->error('Error while adding the book.')->send();
         }
 
-        // Refresh liste
-        $this->books = Book::query()->get();
+        $this->loadBooks();
+    }
+
+    private function loadBooks(): void
+    {
+        try {
+            $this->books = Book::query()->get();
+        } catch (QueryException $e) {
+            report($e);
+            $this->books = [];
+            $this->toast()->error('Error while loading your reading list.')->send();
+        }
     }
 
     public function goToPage(int $page): void

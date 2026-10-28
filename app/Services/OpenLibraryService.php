@@ -14,12 +14,8 @@ class OpenLibraryService
         $response = Http::timeout(10)->get('https://openlibrary.org/search.json', [
             'title' => $title,
             'fields' => 'key,title,author_name,cover_i,isbn,editions,editions_description',
-            'limit' => 6,
-        ]);
-
-        if (! $response->successful()) {
-            return [];
-        }
+            'limit' => 10,
+        ])->throw();
 
         $books = $response->json('docs', []);
 
@@ -42,8 +38,8 @@ class OpenLibraryService
             return ['description' => null, 'rating' => null];
         }
 
-        $workResponse = Http::timeout(10)->get("https://openlibrary.org{$workKey}.json");
-        $ratingsResponse = Http::timeout(10)->get("https://openlibrary.org{$workKey}/ratings.json");
+        $workResponse = Http::timeout(10)->get("https://openlibrary.org{$workKey}.json")->throw();
+        $ratingsResponse = Http::timeout(10)->get("https://openlibrary.org{$workKey}/ratings.json")->throw();
 
         $description = $workResponse->successful()
             ? $this->descriptionFromResponse($workResponse->json('description'))
