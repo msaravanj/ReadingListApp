@@ -2,11 +2,13 @@
 
 namespace App\Filament\Resources\Books\Tables;
 
+use App\Enums\BookStatus;
 use Filament\Actions\BulkActionGroup;
 use Filament\Actions\DeleteBulkAction;
 use Filament\Actions\EditAction;
 use Filament\Tables\Columns\ImageColumn;
 use Filament\Tables\Columns\TextColumn;
+use Filament\Tables\Filters\SelectFilter;
 use Filament\Tables\Table;
 
 class BooksTable
@@ -38,7 +40,8 @@ class BooksTable
                     ->toggleable(isToggledHiddenByDefault: true),
             ])
             ->filters([
-                //
+                SelectFilter::make('status')
+                    ->options(BookStatus::class),
             ])
             ->recordActions([
                 EditAction::make(),

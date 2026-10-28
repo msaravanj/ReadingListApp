@@ -3,7 +3,6 @@
 namespace App\Filament\Resources\Books\Schemas;
 
 use App\Enums\BookStatus;
-use Filament\Forms\Components\FileUpload;
 use Filament\Forms\Components\Select;
 use Filament\Forms\Components\Textarea;
 use Filament\Forms\Components\TextInput;
@@ -23,11 +22,21 @@ class BookForm
                     ->options(BookStatus::class)
                     ->required(),
                 TextInput::make('rating')
-                    ->numeric(),
+                    ->numeric()
+                    ->integer()
+                    ->minValue(1)
+                    ->maxValue(5)
+                    ->nullable(),
+                Select::make('categories')
+                    ->relationship('categories', 'name')
+                    ->multiple()
+                    ->searchable()
+                    ->preload(),
                 Textarea::make('notes')
                     ->columnSpanFull(),
-                FileUpload::make('cover_image')
-                    ->image(),
+                TextInput::make('cover_image')
+                    ->url()
+                    ->nullable(),
                 TextInput::make('isbn'),
             ]);
     }
