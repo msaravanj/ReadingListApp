@@ -23,7 +23,19 @@
                 </div>
                 <div class="rounded-lg bg-library-surface p-4">
                     <p class="text-xs font-semibold uppercase tracking-wide text-gray-500">Rating</p>
-                    <p class="mt-1 text-yellow-400" x-text="book?.rating ?? 'Not rated'"></p>
+                    <div class="mt-1 flex items-center gap-1" role="group" aria-label="Book rating">
+                        <template x-for="rating in [1, 2, 3, 4, 5]" :key="rating">
+                            <button type="button"
+                                x-on:click="if (await $wire.updateBookRating(book.id, rating)) book.rating = rating"
+                                x-bind:class="rating <= (book?.rating ?? 0) ? 'text-yellow-400' : 'text-gray-600'"
+                                class="text-xl transition hover:text-yellow-300"
+                                x-bind:aria-label="`Rate ${rating} out of 5`"
+                                x-bind:aria-pressed="rating === book?.rating">
+                                <span aria-hidden="true">&starf;</span>
+                            </button>
+                        </template>
+                        <span class="ml-1 text-sm text-gray-400" x-text="book?.rating ?? 'Not rated'"></span>
+                    </div>
                 </div>
             </div>
             <div>

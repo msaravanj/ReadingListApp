@@ -7,6 +7,7 @@ use App\Services\OpenLibraryService;
 use Illuminate\Database\QueryException;
 use Illuminate\Http\Client\ConnectionException;
 use Illuminate\Http\Client\RequestException;
+use Illuminate\Database\Eloquent\ModelNotFoundException;
 use Livewire\Attributes\Url;
 use Livewire\Component;
 use TallStackUi\Traits\Interactions;
@@ -73,7 +74,7 @@ new class extends Component {
             $book->author = $author;
             $book->cover_image = $openLibraryService->coverUrl($bookData['cover_i'] ?? null);
             $book->isbn = !empty($bookData['isbn']) ? $bookData['isbn'][0] : '';
-            $book->rating = $metadata['rating'];
+            $book->rating = null;
             $book->notes = $metadata['description'] ?? ($bookData['editions_description'] ?? '');
             $book->status = BookStatus::WANT_TO_READ->value;
 
@@ -107,6 +108,27 @@ new class extends Component {
             $this->books = [];
             $this->toast()->error('Error while loading your reading list.')->send();
         }
+    }
+
+    public function updateBookRating(int $bookId, ?int $rating): bool
+    {
+        try {
+            validator(['rating' => $rating], ['rating' => ['nullable', 'integer', 'between:1,5']])->validate();
+
+            $book = Book::query()->findOrFail($bookId);
+            $book->update(['rating' => $rating]);
+            $this->loadBooks();
+
+            return true;
+        } catch (ModelNotFoundException $e) {
+            report($e);
+            $this->toast()->error('Book could not be found.')->send();
+        } catch (QueryException $e) {
+            report($e);
+            $this->toast()->error('Error while saving the rating.')->send();
+        }
+
+        return false;
     }
 
     public function goToPage(int $page): void

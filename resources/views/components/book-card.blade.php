@@ -9,6 +9,7 @@
         <button type="button" title="View Details"
             class="absolute right-3 top-3 rounded-full bg-black/40 p-2 text-gray-200 backdrop-blur-sm transition hover:bg-black/70 hover:text-white"
             x-on:click.stop="$dispatch('open-book-modal', { book: @js([
+    'id' => $book->id,
     'cover_image' => $book->cover_image,
     'title' => $book->title,
     'isbn' => $book->isbn,
