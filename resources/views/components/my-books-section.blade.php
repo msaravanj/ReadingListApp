@@ -1,14 +1,31 @@
 @props(['books'])
 
 <div x-data="{
-    books: @js($books->map(fn($book) => ['id' => $book->id, 'status' => $book->status->value])),
+    books: @js(
+    $books->map(
+        fn($book) => [
+            'id' => $book->id,
+            'status' => $book->status->value,
+            'title' => $book->title,
+            'author' => $book->author,
+        ],
+    ),
+),
     filterStatus: '',
+    search: '',
     currentPage: 1,
     perPage: 8,
     get filteredBooks() {
-        return this.filterStatus ?
-            this.books.filter(book => book.status === this.filterStatus) :
-            this.books;
+        const search = this.search.trim().toLowerCase();
+
+        return this.books.filter(book => {
+            const matchesStatus = !this.filterStatus || book.status === this.filterStatus;
+            const matchesSearch = !search ||
+                book.title.toLowerCase().includes(search) ||
+                book.author.toLowerCase().includes(search);
+
+            return matchesStatus && matchesSearch;
+        });
     },
     get totalPages() {
         return Math.max(1, Math.ceil(this.filteredBooks.length / this.perPage));
@@ -19,6 +36,10 @@
     },
     setFilter(status) {
         this.filterStatus = status;
+        this.currentPage = 1;
+    },
+    setSearch(search) {
+        this.search = search;
         this.currentPage = 1;
     },
     goToPage(page) {
@@ -57,6 +78,12 @@
                     </button>
                 @endforeach
             </div>
+        </div>
+        <div class="flex w-full justify-end">
+            <label class="sr-only" for="saved-books-search">Search saved books</label>
+            <input id="saved-books-search" type="search" x-on:input="setSearch($event.target.value)"
+                placeholder="Search saved books..."
+                class="w-full rounded border border-library-border bg-library-surface px-3 py-2 text-sm text-white placeholder:text-gray-500 focus:border-gray-500 focus:outline-none sm:max-w-xs">
         </div>
 
         @if ($books->isEmpty())
