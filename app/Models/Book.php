@@ -48,6 +48,7 @@ class Book extends Model
     {
         return LogOptions::defaults()
             ->logOnly(['title', 'author', 'status', 'rating', 'notes', 'cover_image', 'isbn'])
-            ->logOnlyDirty();
+            ->logOnlyDirty()
+            ->setDescriptionForEvent(fn (string $eventName) => "Book has been {$eventName}");
     }
 }
