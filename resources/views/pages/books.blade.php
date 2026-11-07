@@ -14,7 +14,8 @@ use Livewire\Attributes\Url;
 use Livewire\Component;
 use TallStackUi\Traits\Interactions;
 
-new class extends Component {
+new class extends Component
+{
     use Interactions;
 
     #[Url]
@@ -47,21 +48,37 @@ new class extends Component {
     {
         try {
             $this->foundBooks = app(OpenLibraryService::class)->searchBooks($this->search);
-        } catch (ConnectionException | RequestException $e) {
+        } catch (ConnectionException|RequestException $e) {
             report($e);
             $this->foundBooks = [];
             $this->toast()->error('Error while searching for books.')->send();
         }
     }
 
-    public function addBook(int $bookIndex): void
+    /**
+     * @return array{description: string|null, rating: int|null}|null
+     */
+    public function fetchBookMetadata(?string $workKey): ?array
+    {
+        try {
+            return app(OpenLibraryService::class)->bookMetadata($workKey);
+        } catch (ConnectionException|RequestException $e) {
+            report($e);
+            $this->toast()->error('Error while fetching book details.')->send();
+        }
+
+        return null;
+    }
+
+    public function addBook(int $bookIndex): bool
     {
         $bookData = $this->foundBooks[$bookIndex] ?? null;
+        $saved = false;
 
-        if (!is_array($bookData)) {
+        if (! is_array($bookData)) {
             $this->toast()->error('Error occurred while adding the book.')->send();
 
-            return;
+            return false;
         }
 
         try {
@@ -70,12 +87,12 @@ new class extends Component {
             $metadata = $openLibraryService->bookMetadata($bookData['key'] ?? null);
 
             $title = $bookData['title'] ?? 'Untitled';
-            $author = !empty($bookData['author_name']) ? implode(', ', $bookData['author_name']) : 'Unknown Author';
-            $book = new Book();
+            $author = ! empty($bookData['author_name']) ? implode(', ', $bookData['author_name']) : 'Unknown Author';
+            $book = new Book;
             $book->title = $title;
             $book->author = $author;
             $book->cover_image = $openLibraryService->coverUrl($bookData['cover_i'] ?? null);
-            $book->isbn = !empty($bookData['isbn']) ? $bookData['isbn'][0] : '';
+            $book->isbn = ! empty($bookData['isbn']) ? $bookData['isbn'][0] : '';
             $book->rating = null;
             $book->notes = $metadata['description'] ?? ($bookData['editions_description'] ?? '');
             $book->status = BookStatus::WANT_TO_READ->value;
@@ -85,20 +102,26 @@ new class extends Component {
             if ($existingBook) {
                 $this->toast()->error('This book is already in your reading list!')->send();
 
-                return;
+                return false;
             }
 
             $book->save();
             $this->toast()->success('Book added to your reading list!')->send();
-        } catch (ConnectionException | RequestException $e) {
+            $saved = true;
+        } catch (ConnectionException|RequestException $e) {
             report($e);
             $this->toast()->error('Error while fetching book details.')->send();
+        } catch (ValidationException $e) {
+            report($e);
+            $this->toast()->error('Invalid book data.')->send();
         } catch (QueryException $e) {
             report($e);
             $this->toast()->error('Error while adding the book.')->send();
         }
 
         $this->loadBooks();
+
+        return $saved;
     }
 
     private function loadBooks(): void
@@ -198,5 +221,6 @@ new class extends Component {
 <div class="container flex w-full flex-col items-center justify-center gap-4 px-4">
     <x-top-section :foundBooks="$foundBooks" :search="$search" />
     <x-my-books-section :books="$books" />
+    <x-api-book-modal />
     <x-book-modal />
 </div>

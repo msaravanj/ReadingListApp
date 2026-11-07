@@ -30,8 +30,15 @@
                 <div
                     class="relative z-20 flex max-h-96 flex-col gap-2 overflow-y-auto rounded-lg border border-library-border bg-library-bg/95 p-3 shadow-xl backdrop-blur-sm">
                     @foreach ($foundBooks as $index => $book)
-                        <div wire:key="search-result-{{ $index }}" x-data="{ saving: false }"
-                            class="flex items-center gap-3 rounded-md bg-library-surface p-2">
+                        <button type="button" wire:key="search-result-{{ $index }}" x-data="{ loadingMetadata: false }"
+                            class="flex items-center gap-3 rounded-md bg-library-surface p-2 text-left transition hover:bg-white/10 hover:cursor-pointer"
+                            x-on:click="loadingMetadata = true; const metadata = await $wire.fetchBookMetadata(@js($book['key'] ?? null)); loadingMetadata = false; if (metadata) { const book = @js([
+    'index' => $index,
+    'cover_image' => app(\App\Services\OpenLibraryService::class)->coverUrl($book['cover_i'] ?? null),
+    'title' => $book['title'] ?? 'Untitled',
+    'author' => !empty($book['author_name']) ? implode(', ', $book['author_name']) : 'Unknown Author',
+    'isbn' => !empty($book['isbn']) ? $book['isbn'][0] : null,
+]); book.description = metadata.description; $dispatch('open-api-book-modal', { book }); }">
                             <img src="{{ app(\App\Services\OpenLibraryService::class)->coverUrl($book['cover_i'] ?? null) }}"
                                 alt="{{ $book['title'] ?? 'Book cover' }}"
                                 class="h-16 w-11 shrink-0 rounded object-cover">
@@ -43,17 +50,11 @@
                                     {{ !empty($book['author_name']) ? implode(', ', $book['author_name']) : 'Unknown Author' }}
                                 </p>
                             </div>
-                            <div x-show="saving" x-cloak class="shrink-0">
-                                <x-spinner lg gradient />
-                            </div>
-                            <div x-show="!saving" class="shrink-0">
-                                <x-button
-                                    x-on:click="saving = true; $wire.addBook({{ $index }}).finally(() => saving = false)"
-                                    class="rounded-md bg-white px-3 py-1.5 text-xs font-semibold text-library-bg transition hover:bg-gray-200">
-                                    Save
-                                </x-button>
-                            </div>
-                        </div>
+                            <span x-show="!loadingMetadata"
+                                class="shrink-0 text-xs font-semibold text-gray-400">View</span>
+                            <span x-show="loadingMetadata" x-cloak
+                                class="shrink-0 text-xs text-gray-400">Loading...</span>
+                        </button>
                     @endforeach
                 </div>
             @elseif (strlen($search ?? '') >= 3)
