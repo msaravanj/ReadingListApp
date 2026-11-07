@@ -4,10 +4,12 @@ use App\Enums\BookStatus;
 use App\Http\Requests\OpenLibraryBookRequest;
 use App\Models\Book;
 use App\Services\OpenLibraryService;
+use Illuminate\Database\Eloquent\ModelNotFoundException;
 use Illuminate\Database\QueryException;
 use Illuminate\Http\Client\ConnectionException;
 use Illuminate\Http\Client\RequestException;
-use Illuminate\Database\Eloquent\ModelNotFoundException;
+use Illuminate\Validation\Rule;
+use Illuminate\Validation\ValidationException;
 use Livewire\Attributes\Url;
 use Livewire\Component;
 use TallStackUi\Traits\Interactions;
@@ -126,6 +128,30 @@ new class extends Component {
         } catch (QueryException $e) {
             report($e);
             $this->toast()->error('Error while saving the rating.')->send();
+        }
+
+        return false;
+    }
+
+    public function updateBookStatus(int $bookId, string $status): bool
+    {
+        try {
+            $validated = validator(['status' => $status], ['status' => ['required', Rule::enum(BookStatus::class)]])->validate();
+
+            $book = Book::query()->findOrFail($bookId);
+            $book->update(['status' => $validated['status']]);
+            $this->loadBooks();
+
+            return true;
+        } catch (ModelNotFoundException $e) {
+            report($e);
+            $this->toast()->error('Book could not be found.')->send();
+        } catch (ValidationException $e) {
+            report($e);
+            $this->toast()->error('Invalid book status.')->send();
+        } catch (QueryException $e) {
+            report($e);
+            $this->toast()->error('Error while saving the status.')->send();
         }
 
         return false;

@@ -17,9 +17,14 @@
             <div class="grid gap-4 sm:grid-cols-2">
                 <div class="rounded-lg bg-library-surface p-4">
                     <p class="text-xs font-semibold uppercase tracking-wide text-gray-500">Status</p>
-                    <p class="mt-1 font-medium text-library-cream"
-                        x-text="{ want_to_read: 'Want to Read', reading: 'Reading', read: 'Read' }[book?.status] ?? 'Unknown'">
-                    </p>
+                    <select class="mt-1 w-full rounded border border-library-border bg-library-bg px-2 py-1 font-medium text-library-cream"
+                        x-bind:value="book?.status"
+                        x-on:change="const status = $event.target.value; if (await $wire.updateBookStatus(book.id, status)) book.status = status; else $event.target.value = book.status"
+                        aria-label="Book status">
+                        <option value="want_to_read">Want to Read</option>
+                        <option value="reading">Reading</option>
+                        <option value="read">Read</option>
+                    </select>
                 </div>
                 <div class="rounded-lg bg-library-surface p-4">
                     <p class="text-xs font-semibold uppercase tracking-wide text-gray-500">Rating</p>
