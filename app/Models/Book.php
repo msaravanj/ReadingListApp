@@ -25,6 +25,7 @@ class Book extends Model
         'status',
         'rating',
         'notes',
+        'notices',
         'cover_image',
         'isbn',
     ];
@@ -47,7 +48,7 @@ class Book extends Model
     public function getActivitylogOptions(): LogOptions
     {
         return LogOptions::defaults()
-            ->logOnly(['title', 'author', 'status', 'rating', 'notes', 'cover_image', 'isbn'])
+            ->logOnly(['title', 'author', 'status', 'rating', 'notes', 'notices', 'cover_image', 'isbn'])
             ->logOnlyDirty()
             ->setDescriptionForEvent(fn (string $eventName) => "Book has been {$eventName}");
     }

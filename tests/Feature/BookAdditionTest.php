@@ -82,4 +82,18 @@ class BookAdditionTest extends TestCase
             'title' => 'Unavailable Metadata Book',
         ]);
     }
+
+    public function test_it_saves_book_notices(): void
+    {
+        $book = Book::factory()->create();
+
+        Livewire::test('pages.books')
+            ->call('updateBookNotices', $book->id, 'Remember the quote on page 42.')
+            ->assertHasNoErrors();
+
+        $this->assertDatabaseHas('books', [
+            'id' => $book->id,
+            'notices' => 'Remember the quote on page 42.',
+        ]);
+    }
 }

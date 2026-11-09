@@ -17,6 +17,7 @@
     'status' => $book->status->value,
     'rating' => $book->rating,
     'notes' => $book->notes,
+    'notices' => $book->notices,
 ]) })">
             <x-icon name="arrows-pointing-out" class="h-4 w-4" />
         </button>

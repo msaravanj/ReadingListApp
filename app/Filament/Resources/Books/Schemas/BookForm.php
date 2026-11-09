@@ -34,6 +34,9 @@ class BookForm
                     ->preload(),
                 Textarea::make('notes')
                     ->columnSpanFull(),
+                Textarea::make('notices')
+                    ->label('Notices')
+                    ->columnSpanFull(),
                 TextInput::make('cover_image')
                     ->url()
                     ->nullable(),

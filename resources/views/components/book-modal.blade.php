@@ -1,4 +1,5 @@
-<div x-data="{ book: null, show: false }" x-on:open-book-modal.window="book = $event.detail.book; show = true"
+<div x-data="{ book: null, show: false, savedNotices: '' }"
+    x-on:open-book-modal.window="book = $event.detail.book; savedNotices = book.notices ?? ''; show = true"
     x-on:keydown.escape.window="show = false" x-cloak x-show="show"
     class="fixed inset-0 z-50 flex items-center justify-center overflow-y-auto bg-black/70 p-4 backdrop-blur-sm"
     role="dialog" aria-modal="true" x-on:click.self="show = false" x-transition.opacity>
@@ -17,7 +18,8 @@
             <div class="grid gap-4 sm:grid-cols-2">
                 <div class="rounded-lg bg-library-surface p-4">
                     <p class="text-xs font-semibold uppercase tracking-wide text-gray-500">Status</p>
-                    <select class="mt-1 w-full rounded border border-library-border bg-library-bg px-2 py-1 font-medium text-library-cream"
+                    <select
+                        class="mt-1 w-full rounded border border-library-border bg-library-bg px-2 py-1 font-medium text-library-cream"
                         x-bind:value="book?.status"
                         x-on:change="const status = $event.target.value; if (await $wire.updateBookStatus(book.id, status)) book.status = status; else $event.target.value = book.status"
                         aria-label="Book status">
@@ -51,9 +53,17 @@
                 </div>
             </div>
             <div>
-                <p class="mb-2 text-xs font-semibold uppercase tracking-wide text-gray-500">Notes</p>
+                <p class="mb-2 text-xs font-semibold uppercase tracking-wide text-gray-500">Description</p>
                 <p class="whitespace-pre-line text-sm leading-6 text-gray-300"
-                    x-text="book?.notes || 'No notes available.'"></p>
+                    x-text="book?.notes || 'No description available.'"></p>
+            </div>
+            <div>
+                <label class="mb-2 block text-xs font-semibold uppercase tracking-wide text-gray-500"
+                    for="book-notices">Notices</label>
+                <textarea id="book-notices" rows="4" x-model="book.notices"
+                    x-on:blur="if (await $wire.updateBookNotices(book.id, $event.target.value)) savedNotices = $event.target.value; else book.notices = savedNotices"
+                    class="w-full rounded-lg border border-library-border bg-library-surface px-3 py-2 text-sm leading-6 text-gray-300 outline-none transition focus:border-gray-500 focus:ring-1 focus:ring-gray-500"
+                    placeholder="Write your personal notes about this book..."></textarea>
             </div>
         </div>
         <button type="button"

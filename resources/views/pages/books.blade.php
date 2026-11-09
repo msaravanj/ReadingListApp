@@ -180,6 +180,32 @@ new class extends Component
         return false;
     }
 
+    public function updateBookNotices(int $bookId, ?string $notices): bool
+    {
+        try {
+            $validated = validator(['notices' => $notices], [
+                'notices' => ['nullable', 'string', 'max:10000'],
+            ])->validate();
+
+            $book = Book::query()->findOrFail($bookId);
+            $book->update(['notices' => $validated['notices']]);
+            $this->loadBooks();
+
+            return true;
+        } catch (ModelNotFoundException $e) {
+            report($e);
+            $this->toast()->error('Book could not be found.')->send();
+        } catch (ValidationException $e) {
+            report($e);
+            $this->toast()->error('Invalid book notices.')->send();
+        } catch (QueryException $e) {
+            report($e);
+            $this->toast()->error('Error while saving the notices.')->send();
+        }
+
+        return false;
+    }
+
     public function goToPage(int $page): void
     {
         $this->currentPage = max(1, min($page, $this->totalPages));
