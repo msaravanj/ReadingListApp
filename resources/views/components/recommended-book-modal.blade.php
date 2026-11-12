@@ -1,5 +1,4 @@
-<div x-data="{ book: null, show: false, saving: false }"
-    x-on:open-recommended-book-modal.window="book = $event.detail.book; show = true"
+<div x-data="{ book: null, show: false, saving: false }" x-on:open-recommended-book-modal.window="book = $event.detail.book; show = true"
     x-on:keydown.escape.window="show = false" x-cloak x-show="show"
     class="fixed inset-0 z-50 flex items-center justify-center overflow-y-auto bg-black/70 p-4 backdrop-blur-sm"
     role="dialog" aria-modal="true" x-on:click.self="show = false" x-transition.opacity>

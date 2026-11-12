@@ -17,7 +17,7 @@ class FetchNewBooks extends Command
     /**
      * Execute the console command.
      */
-    public function handle(BookCuratorAgent $agent, OpenLibraryService $openLibraryService)
+    public function handle(BookCuratorAgent $agent, OpenLibraryService $openLibraryService): int
     {
         $this->info('Pokrećem AI agenta za pretragu knjiga...');
 
@@ -25,7 +25,7 @@ class FetchNewBooks extends Command
 
         // 1. Pozivamo agenta koji odmah vraća formatirani PHP niz
         $response = $agent->findNewReleases();
-        $booksData = $response['books'] ?? [];
+        $booksData = $response['books'];
 
         foreach ($booksData as $book) {
             $olBooks = $openLibraryService->searchBooks($book['title']);
@@ -42,7 +42,7 @@ class FetchNewBooks extends Command
                     [
                         'title' => $olBook['title'],
                         'author' => implode(', ', $olBook['author_name'] ?? [$book['author']]),
-                        'notes' => $openLibraryService->fetchBookDescription($olBook['key'])['description'],
+                        'notes' => $openLibraryService->fetchDescription($olBook['key'])['description'],
                         'status' => BookStatus::WANT_TO_READ,
                         'cover_image' => $coverImage !== '' ? $coverImage : null,
                         'isbn' => $olBook['isbn'][0] ?? null,
@@ -54,5 +54,7 @@ class FetchNewBooks extends Command
         }
 
         $this->info('All books have been successfully synchronized with the Laravel AI!');
+
+        return self::SUCCESS;
     }
 }
