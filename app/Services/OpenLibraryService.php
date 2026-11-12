@@ -32,7 +32,7 @@ class OpenLibraryService
     /**
      * Fetch the description of a book from Open Library.
      *
-     * @param ?string $workKey The key of the work to fetch the description for.
+     * @param  ?string  $workKey  The key of the work to fetch the description for.
      * @return array{description: string|null}
      */
     public function fetchDescription(?string $workKey): array
