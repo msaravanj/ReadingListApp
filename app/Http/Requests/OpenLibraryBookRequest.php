@@ -24,7 +24,6 @@ class OpenLibraryBookRequest extends FormRequest
             'cover_i' => ['nullable', 'integer'],
             'isbn' => ['nullable', 'array'],
             'isbn.*' => ['string'],
-            'editions_description' => ['nullable', 'string'],
         ];
     }
 }

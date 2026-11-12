@@ -30,15 +30,15 @@
                 <div
                     class="relative z-20 flex max-h-96 flex-col gap-2 overflow-y-auto rounded-lg border border-library-border bg-library-bg/95 p-3 shadow-xl backdrop-blur-sm">
                     @foreach ($foundBooks as $index => $book)
-                        <button type="button" wire:key="search-result-{{ $index }}" x-data="{ loadingMetadata: false }"
+                        <button type="button" wire:key="search-result-{{ $index }}" x-data="{ loadingDescription: false }"
                             class="flex items-center gap-3 rounded-md bg-library-surface p-2 text-left transition hover:bg-white/10 hover:cursor-pointer"
-                            x-on:click="loadingMetadata = true; const metadata = await $wire.fetchBookMetadata(@js($book['key'] ?? null)); loadingMetadata = false; if (metadata) { const book = @js([
+                            x-on:click="loadingDescription = true; const description = await $wire.fetchDescription(@js($book['key'] ?? null)); loadingDescription = false; if (description) { const book = @js([
     'index' => $index,
     'cover_image' => app(\App\Services\OpenLibraryService::class)->coverUrl($book['cover_i'] ?? null),
     'title' => $book['title'] ?? 'Untitled',
     'author' => !empty($book['author_name']) ? implode(', ', $book['author_name']) : 'Unknown Author',
     'isbn' => !empty($book['isbn']) ? $book['isbn'][0] : null,
-]); book.description = metadata.description; $dispatch('open-api-book-modal', { book }); }">
+]); book.description = description; $dispatch('open-api-book-modal', { book }); }">
                             <img src="{{ app(\App\Services\OpenLibraryService::class)->coverUrl($book['cover_i'] ?? null) }}"
                                 alt="{{ $book['title'] ?? 'Book cover' }}"
                                 class="h-16 w-11 shrink-0 rounded object-cover">
@@ -50,9 +50,9 @@
                                     {{ !empty($book['author_name']) ? implode(', ', $book['author_name']) : 'Unknown Author' }}
                                 </p>
                             </div>
-                            <span x-show="!loadingMetadata"
+                            <span x-show="!loadingDescription"
                                 class="shrink-0 text-xs font-semibold text-gray-400">View</span>
-                            <span x-show="loadingMetadata" x-cloak
+                            <span x-show="loadingDescription" x-cloak
                                 class="shrink-0 text-xs text-gray-400">Loading...</span>
                         </button>
                     @endforeach

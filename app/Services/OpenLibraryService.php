@@ -13,7 +13,7 @@ class OpenLibraryService
     {
         $response = Http::timeout(10)->get('https://openlibrary.org/search.json', [
             'q' => $title,
-            'fields' => 'key,title,author_name,cover_i,isbn,editions,editions_description',
+            'fields' => 'key,title,author_name,cover_i,isbn',
             'limit' => 10,
         ])->throw();
 
@@ -30,29 +30,24 @@ class OpenLibraryService
     }
 
     /**
-     * @return array{description: string|null, rating: int|null}
+     * Fetch the description of a book from Open Library.
+     *
+     * @param ?string $workKey The key of the work to fetch the description for.
+     * @return array{description: string|null}
      */
-    public function bookMetadata(?string $workKey): array
+    public function fetchDescription(?string $workKey): array
     {
         if ($workKey === null || ! str_starts_with($workKey, '/works/')) {
-            return ['description' => null, 'rating' => null];
+            return ['description' => null];
         }
 
         $workResponse = Http::timeout(10)->get("https://openlibrary.org{$workKey}.json")->throw();
-        $ratingsResponse = Http::timeout(10)->get("https://openlibrary.org{$workKey}/ratings.json")->throw();
 
         $description = $workResponse->successful()
             ? $this->descriptionFromResponse($workResponse->json('description'))
             : null;
 
-        $average = $ratingsResponse->successful()
-            ? $ratingsResponse->json('summary.average')
-            : null;
-
-        return [
-            'description' => $description,
-            'rating' => is_numeric($average) ? (int) round((float) $average) : null,
-        ];
+        return ['description' => $description];
     }
 
     private function descriptionFromResponse(mixed $description): ?string

@@ -22,12 +22,12 @@
             <div>
                 <p class="mb-2 text-xs font-semibold uppercase tracking-wide text-gray-500">Description</p>
                 <p class="whitespace-pre-line text-sm leading-6 text-gray-300"
-                    x-text="book?.description || 'No description available.'"></p>
+                    x-text="book?.description?.description || book?.notes || 'No description available.'"></p>
             </div>
             <button type="button"
                 x-on:click="saving = true; $wire.addBook(book.index).then(saved => { saving = false; if (saved) show = false }).catch(() => saving = false)"
                 x-bind:disabled="saving"
-                class="rounded-md bg-white px-4 py-2 text-sm font-semibold text-library-bg transition hover:bg-gray-200 hover:cursor-pointer disabled:cursor-wait disabled:opacity-60">
+                class="rounded-md bg-white px-4 py-2 my-4 text-sm font-semibold text-library-bg transition hover:bg-gray-200 hover:cursor-pointer disabled:cursor-wait disabled:opacity-60">
                 <span x-show="!saving">Save</span>
                 <span x-show="saving">Saving...</span>
             </button>

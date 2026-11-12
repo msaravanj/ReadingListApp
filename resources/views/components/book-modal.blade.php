@@ -60,8 +60,8 @@
             <div>
                 <label class="mb-2 block text-xs font-semibold uppercase tracking-wide text-gray-500"
                     for="book-notices">Notices</label>
-                <textarea id="book-notices" rows="4" x-model="book.notices"
-                    x-on:blur="if (await $wire.updateBookNotices(book.id, $event.target.value)) savedNotices = $event.target.value; else book.notices = savedNotices"
+                <textarea id="book-notices" rows="4" x-model="savedNotices"
+                    x-on:blur="if (await $wire.updateBookNotices(book.id, $event.target.value)) book.notices = $event.target.value; else savedNotices = book.notices ?? ''"
                     class="w-full rounded-lg border border-library-border bg-library-surface px-3 py-2 text-sm leading-6 text-gray-300 outline-none transition focus:border-gray-500 focus:ring-1 focus:ring-gray-500"
                     placeholder="Write your personal notes about this book..."></textarea>
             </div>

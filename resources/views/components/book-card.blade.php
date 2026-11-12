@@ -1,4 +1,4 @@
-@props(['book'])
+@props(['book', 'modalEvent' => 'open-book-modal'])
 
 <div
     class="group relative flex h-full min-h-80 w-full min-w-0 flex-col overflow-hidden rounded-xl border border-library-border bg-library-surface shadow-md transition duration-300 hover:-translate-y-1 hover:border-gray-600 hover:shadow-xl">
@@ -8,7 +8,7 @@
         <div class="absolute inset-0 bg-gradient-to-t from-black/70 via-transparent to-transparent"></div>
         <button type="button" title="View Details"
             class="absolute right-3 top-3 rounded-full bg-black/40 p-2 text-gray-200 backdrop-blur-sm transition hover:bg-black/70 hover:text-white"
-            x-on:click.stop="$dispatch('open-book-modal', { book: @js([
+            x-on:click.stop="$dispatch('{{ $modalEvent }}', { book: @js([
     'id' => $book->id,
     'cover_image' => $book->cover_image,
     'title' => $book->title,

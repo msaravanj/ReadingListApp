@@ -33,3 +33,28 @@
     --color-library-lavender: #a99ad5;
     --color-library-amber: #d6a45d;
 }
+
+@keyframes recommended-books-scroll {
+    from {
+        transform: translateX(0);
+    }
+
+    to {
+        transform: translateX(-30%);
+    }
+}
+
+.recommended-books-track {
+    animation: recommended-books-scroll 45s linear infinite;
+    width: max-content;
+}
+
+.recommended-books-viewport:hover .recommended-books-track {
+    animation-play-state: paused;
+}
+
+@media (prefers-reduced-motion: reduce) {
+    .recommended-books-track {
+        animation: none;
+    }
+}
