@@ -16,9 +16,9 @@ class BookDescriptionService
         }
 
         $response = $this->agent->generateDescription($title, $author);
-        $description = $response['description'] ?? null;
+        $description = $response['description'];
 
-        if (! is_string($description) || blank($description)) {
+        if (blank($description)) {
             throw new UnexpectedValueException('The book description agent returned an empty description.');
         }
 
