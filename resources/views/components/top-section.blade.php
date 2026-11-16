@@ -32,7 +32,7 @@
                     @foreach ($foundBooks as $index => $book)
                         <button type="button" wire:key="search-result-{{ $index }}" x-data="{ loadingDescription: false }"
                             class="flex items-center gap-3 rounded-md bg-library-surface p-2 text-left transition hover:bg-white/10 hover:cursor-pointer"
-                            x-on:click="loadingDescription = true; const description = await $wire.fetchDescription(@js($book['key'] ?? null)); loadingDescription = false; if (description) { const book = @js([
+                            x-on:click="loadingDescription = true; const description = await $wire.fetchDescription(@js($book['key'] ?? null), @js($book['title'] ?? null), @js(!empty($book['author_name']) ? implode(', ', $book['author_name']) : null)); loadingDescription = false; if (description) { const book = @js([
     'index' => $index,
     'cover_image' => app(\App\Services\OpenLibraryService::class)->coverUrl($book['cover_i'] ?? null),
     'title' => $book['title'] ?? 'Untitled',
@@ -51,7 +51,7 @@
                                 </p>
                             </div>
                             <span x-show="!loadingDescription"
-                                class="shrink-0 text-xs font-semibold text-gray-400">View</span>
+                                class="shrink-0 text-xs font-semibold text-gray-400"></span>
                             <span x-show="loadingDescription" x-cloak
                                 class="shrink-0 text-xs text-gray-400">Loading...</span>
                         </button>

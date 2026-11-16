@@ -59,6 +59,18 @@ new class extends Component {
         $this->fetchBooks();
     }
 
+    public function checkBookDescriptions(): void
+    {
+        foreach ($this->foundBooks as $index => $book) {
+            if (blank($book['description'] ?? null)) {
+                $description = $this->fetchDescription($book['key'] ?? null, $book['title'] ?? null, !empty($book['author_name']) ? implode(', ', $book['author_name']) : null);
+                if (filled($description)) {
+                    $this->foundBooks[$index]['description'] = $description;
+                }
+            }
+        }
+    }
+
     public function fetchBooks(): void
     {
         try {
@@ -70,13 +82,10 @@ new class extends Component {
         }
     }
 
-    /**
-     * @return array{description: string|null, rating: int|null}|null
-     */
-    public function fetchDescription(?string $workKey): ?array
+    public function fetchDescription(?string $workKey, ?string $title = null, ?string $author = null): ?string
     {
         try {
-            return app(OpenLibraryService::class)->fetchDescription($workKey);
+            return app(OpenLibraryService::class)->fetchDescription($workKey, $title, $author)['description'];
         } catch (ConnectionException | RequestException $e) {
             report($e);
             $this->toast()->error('Error while fetching book details.')->send();
@@ -144,17 +153,17 @@ new class extends Component {
         try {
             $bookData = validator($bookData, new OpenLibraryBookRequest()->rules())->validate();
             $openLibraryService = app(OpenLibraryService::class);
-            $descriptionData = $openLibraryService->fetchDescription($bookData['key'] ?? null);
 
             $title = $bookData['title'] ?? 'Untitled';
             $author = !empty($bookData['author_name']) ? implode(', ', $bookData['author_name']) : 'Unknown Author';
+            $descriptionData = $openLibraryService->fetchDescription($bookData['key'] ?? null, $title, $author);
             $book = new Book();
             $book->title = $title;
             $book->author = $author;
             $book->cover_image = $openLibraryService->coverUrl(is_int($bookData['cover_i'] ?? null) ? $bookData['cover_i'] : null);
             $book->isbn = !empty($bookData['isbn']) ? $bookData['isbn'][0] : '';
             $book->rating = null;
-            $book->notes = $descriptionData['description'] ?? '';
+            $book->notes = $descriptionData['description'] ?? null;
             $book->status = BookStatus::WANT_TO_READ->value;
 
             $existingBook = Book::where('title', $title)->where('author', $author)->first();

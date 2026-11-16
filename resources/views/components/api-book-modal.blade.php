@@ -22,7 +22,8 @@
             <div>
                 <p class="mb-2 text-xs font-semibold uppercase tracking-wide text-gray-500">Description</p>
                 <p class="whitespace-pre-line text-sm leading-6 text-gray-300"
-                    x-text="book?.description?.description || book?.notes || 'No description available.'"></p>
+                    x-text="book?.description || book?.notes || 'No description available.'">
+                </p>
             </div>
             <button type="button"
                 x-on:click="saving = true; $wire.addBook(book.index).then(saved => { saving = false; if (saved) show = false }).catch(() => saving = false)"

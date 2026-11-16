@@ -32,6 +32,7 @@ class FetchNewBooks extends Command
 
             if ($olBooks !== []) {
                 $olBook = $olBooks[0];
+                $author = implode(', ', $olBook['author_name'] ?? [$book['author']]);
                 $coverImage = $openLibraryService->coverUrl(
                     is_int($olBook['cover_i'] ?? null) ? $olBook['cover_i'] : null
                 );
@@ -41,8 +42,12 @@ class FetchNewBooks extends Command
                     ['open_library_key' => $olBook['key']],
                     [
                         'title' => $olBook['title'],
-                        'author' => implode(', ', $olBook['author_name'] ?? [$book['author']]),
-                        'notes' => $openLibraryService->fetchDescription($olBook['key'])['description'],
+                        'author' => $author,
+                        'notes' => $openLibraryService->fetchDescription(
+                            $olBook['key'],
+                            $olBook['title'],
+                            $author
+                        )['description'],
                         'status' => BookStatus::WANT_TO_READ,
                         'cover_image' => $coverImage !== '' ? $coverImage : null,
                         'isbn' => $olBook['isbn'][0] ?? null,

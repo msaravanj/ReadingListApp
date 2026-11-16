@@ -6,6 +6,10 @@ use Illuminate\Support\Facades\Http;
 
 class OpenLibraryService
 {
+    public function __construct(
+        private BookDescriptionService $bookDescriptionService
+    ) {}
+
     /**
      * @return array<int, array<string, mixed>>
      */
@@ -33,26 +37,31 @@ class OpenLibraryService
      * Fetch the description of a book from Open Library.
      *
      * @param  ?string  $workKey  The key of the work to fetch the description for.
+     * @param  ?string  $title  The title of the book.
+     * @param  ?string  $author  The author of the book.
      * @return array{description: string|null}
      */
-    public function fetchDescription(?string $workKey): array
+    public function fetchDescription(?string $workKey, ?string $title = null, ?string $author = null): array
     {
-        if ($workKey === null || ! str_starts_with($workKey, '/works/')) {
-            return ['description' => null];
+        $description = null;
+
+        if ($workKey !== null && str_starts_with($workKey, '/works/')) {
+            $workResponse = Http::timeout(10)->get("https://openlibrary.org{$workKey}.json")->throw();
+            $description = $workResponse->successful()
+                ? $this->descriptionFromResponse($workResponse->json('description'))
+                : null;
         }
 
-        $workResponse = Http::timeout(10)->get("https://openlibrary.org{$workKey}.json")->throw();
-
-        $description = $workResponse->successful()
-            ? $this->descriptionFromResponse($workResponse->json('description'))
-            : null;
+        if (blank($description) && filled($title) && filled($author)) {
+            $description = $this->bookDescriptionService->fillIfEmpty($title, $author, null);
+        }
 
         return ['description' => $description];
     }
 
     private function descriptionFromResponse(mixed $description): ?string
     {
-        if (is_string($description)) {
+        if (is_string($description) && $description !== '') {
             return $description;
         }
 
