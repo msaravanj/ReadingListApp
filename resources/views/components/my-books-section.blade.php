@@ -1,5 +1,9 @@
 @props(['books'])
 
+@php
+    $categories = \App\Models\Category::query()->orderBy('name')->pluck('name');
+@endphp
+
 <div x-data="{
     books: @js(
     $books->map(
@@ -8,10 +12,12 @@
             'status' => $book->status->value,
             'title' => $book->title,
             'author' => $book->author,
+            'categories' => $book->categories->pluck('name')->values(),
         ],
     ),
 ),
     filterStatus: '',
+    filterCategory: '',
     search: '',
     currentPage: 1,
     perPage: 8,
@@ -23,8 +29,10 @@
             const matchesSearch = !search ||
                 book.title.toLowerCase().includes(search) ||
                 book.author.toLowerCase().includes(search);
+            const matchesCategory = !this.filterCategory ||
+                book.categories.includes(this.filterCategory);
 
-            return matchesStatus && matchesSearch;
+            return matchesStatus && matchesSearch && matchesCategory;
         });
     },
     get totalPages() {
@@ -36,6 +44,10 @@
     },
     setFilter(status) {
         this.filterStatus = status;
+        this.currentPage = 1;
+    },
+    setCategoryFilter(category) {
+        this.filterCategory = category;
         this.currentPage = 1;
     },
     setSearch(search) {
@@ -77,6 +89,17 @@
                         {{ $label }}
                     </button>
                 @endforeach
+            </div>
+            <div class="flex flex-wrap items-center justify-end gap-2">
+                <label for="saved-books-category" class="text-sm">Filter by category:</label>
+                <select id="saved-books-category" x-model="filterCategory"
+                    x-on:change="setCategoryFilter($event.target.value)"
+                    class="rounded border border-library-border bg-library-surface px-2 py-1 text-sm text-white">
+                    <option value="">All categories</option>
+                    @foreach ($categories as $category)
+                        <option value="{{ $category }}">{{ $category }}</option>
+                    @endforeach
+                </select>
             </div>
         </div>
         <div class="flex w-full justify-end">
