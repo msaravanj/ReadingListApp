@@ -26,10 +26,6 @@ class BookCategoryService
 
         $availableCategories = [];
         foreach ($categories as $category) {
-            if (! is_string($category->name)) {
-                throw new UnexpectedValueException('A category has an invalid name.');
-            }
-
             $availableCategories[] = $category->name;
         }
         $response = $this->agent->generateCategories(
@@ -42,8 +38,7 @@ class BookCategoryService
 
         foreach ($response['categories'] as $name) {
             $category = $categories->first(
-                fn (Category $category): bool => is_string($category->name)
-                    && strcasecmp($category->name, $name) === 0
+                fn (Category $category): bool => strcasecmp($category->name, $name) === 0
             );
 
             if ($category === null) {
