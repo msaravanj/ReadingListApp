@@ -54,6 +54,7 @@
         ],
         "dev": [
             "Composer\\Config::disableProcessTimeout",
+            "@php artisan books:fetch-recommended",
             "@php artisan dev"
         ],
         "lint": [
