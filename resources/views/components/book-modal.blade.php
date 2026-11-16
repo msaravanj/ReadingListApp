@@ -15,6 +15,16 @@
                 <h2 class="text-2xl font-bold text-white sm:text-3xl" x-text="book?.title"></h2>
                 <p class="mt-2 text-gray-400" x-text="book?.author"></p>
             </div>
+            <div>
+                <p class="mb-2 text-xs font-semibold uppercase tracking-wide text-gray-500">Categories</p>
+                <div class="flex flex-wrap gap-2">
+                    <template x-for="category in (book?.categories ?? [])" :key="category">
+                        <span class="rounded-full bg-library-surface px-3 py-1 text-sm text-gray-300"
+                            x-text="category"></span>
+                    </template>
+                    <span x-show="!book?.categories?.length" class="text-sm text-gray-500">No categories</span>
+                </div>
+            </div>
             <div class="grid gap-4 sm:grid-cols-2">
                 <div class="rounded-lg bg-library-surface p-4">
                     <p class="text-xs font-semibold uppercase tracking-wide text-gray-500">Status</p>

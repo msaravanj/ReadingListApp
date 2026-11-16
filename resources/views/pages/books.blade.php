@@ -4,6 +4,7 @@ use App\Enums\BookStatus;
 use App\Http\Requests\OpenLibraryBookRequest;
 use App\Models\Book;
 use App\Models\RecommendedBook;
+use App\Services\BookCategoryService;
 use App\Services\OpenLibraryService;
 use Illuminate\Database\Eloquent\ModelNotFoundException;
 use Illuminate\Database\QueryException;
@@ -116,8 +117,15 @@ new class extends Component {
                 return false;
             }
 
-            DB::transaction(function () use ($recommendedBook, $bookData): void {
-                Book::create($bookData);
+            $categoryIds = app(BookCategoryService::class)->categoryIdsFor(
+                $bookData['title'],
+                $bookData['author'],
+                $bookData['notes']
+            );
+
+            DB::transaction(function () use ($recommendedBook, $bookData, $categoryIds): void {
+                $book = Book::create($bookData);
+                $book->categories()->sync($categoryIds);
                 $recommendedBook->delete();
             });
             $this->toast()->success('Recommended book added to your reading list!')->send();
@@ -174,7 +182,14 @@ new class extends Component {
                 return false;
             }
 
+            $categoryIds = app(BookCategoryService::class)->categoryIdsFor(
+                $title,
+                $author,
+                $book->notes
+            );
+
             $book->save();
+            $book->categories()->sync($categoryIds);
             $this->toast()->success('Book added to your reading list!')->send();
             $saved = true;
         } catch (ConnectionException | RequestException $e) {
@@ -196,7 +211,7 @@ new class extends Component {
     private function loadBooks(): void
     {
         try {
-            $this->books = Book::query()->get();
+            $this->books = Book::query()->with('categories')->get();
         } catch (QueryException $e) {
             report($e);
             $this->books = [];

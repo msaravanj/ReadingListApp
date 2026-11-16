@@ -11,6 +11,7 @@
     'rating' => $book->rating,
     'notes' => $book->notes,
     'notices' => $book->notices,
+    'categories' => collect($book->categories ?? [])->pluck('name')->values(),
 ]) })"
     x-on:keydown.enter="$el.click()" x-on:keydown.space.prevent="$el.click()">
     <div class="relative h-56 shrink-0 overflow-hidden bg-black/20">
